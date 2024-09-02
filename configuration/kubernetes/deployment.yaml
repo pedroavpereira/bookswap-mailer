@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bookswap
+    microservice: mailer
+  name: mailer
+  namespace: default
+spec:
+  replicas: 1
+  minReadySeconds: 30
+  selector:
+    matchLabels:
+    app: bookswap
+    microservice: mailer
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: bookswap
+        microservice: mailer
+    spec:
+      containers:
+        - image: pedroavpereiradev/book-swap-mailer:latest
+          imagePullPolicy: IfNotPresent
+          name: auth
+          env:
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_USER
+                  name: db-configmap
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_PASSWORD
+                  name: db-configmap
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_HOST
+                  name: db-configmap
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_NAME
+                  name: db-configmap
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: DB_PORT
+                  name: db-configmap
+            - name: EMAIL_USER
+              valueFrom:
+                secretKeyRef:
+                  key: EMAIL_USER
+                  name: email-secret
+            - name: EMAIL_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: EMAIL_PASS
+                  name: email-secret
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 45
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: bookswap
+    microservice: mailer
+  name: auth-load-balancer
+  namespace: default
+spec:
+  ports:
+    - nodePort: 30637
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
+  selector:
+    app: app
+    microservice: auth
+  sessionAffinity: None
+  type: LoadBalancer
