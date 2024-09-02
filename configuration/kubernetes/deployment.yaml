@@ -11,8 +11,8 @@ spec:
   minReadySeconds: 30
   selector:
     matchLabels:
-    app: bookswap
-    microservice: mailer
+      app: bookswap
+      microservice: mailer
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -27,7 +27,7 @@ spec:
       containers:
         - image: pedroavpereiradev/book-swap-mailer:latest
           imagePullPolicy: IfNotPresent
-          name: auth
+          name: mailer
           env:
             - name: DB_USER
               valueFrom:
@@ -80,14 +80,14 @@ metadata:
   labels:
     app: bookswap
     microservice: mailer
-  name: auth-load-balancer
+  name: mailer-load
   namespace: default
 spec:
   ports:
-    - nodePort: 30637
+    - nodePort: 30638
       protocol: TCP
-      port: 5000
-      targetPort: 5000
+      port: 4000
+      targetPort: 4000
   selector:
     app: app
     microservice: auth
